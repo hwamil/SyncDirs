@@ -169,11 +169,7 @@ os.chdir(os.path.dirname(__file__))
 if 'SyncDirsData' in os.listdir(os.getcwd()):
     SyncDirs.loadJobs()
 
-# job1 = SyncDirs('1', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/PY2/CLONE1')
-# job2 = SyncDirs('2', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/PY3/CLONE2')
-# job3 = SyncDirs('3', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/PY4/CLN3')
-# job4 = SyncDirs('4', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/PY5/SPAM/MUSUBU')
-# job5 = SyncDirs('5', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/PY6/BEYOND/THE')
+# job1 = SyncDirs('example_task', 'SOURCE DIRECTORY', 'TARGET DIRECTORY')
 
 while True:
     SyncDirs.run()
