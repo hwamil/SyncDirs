@@ -1,11 +1,9 @@
 import os
 from os import sep
 import shutil
-import pprint
-import shelve
-from time import time
-from time import sleep
+from time import time, sleep
 from datetime import datetime
+from sys import exit
 
 
 class SyncDirs:
@@ -21,7 +19,7 @@ class SyncDirs:
         obj: instance of SyncDirs
     """
     jobs = set()
-    def __init__(self, name, src, tgt):
+    def __init__(self, name, paths):
         """
         Initialize an instance of SyncDirs.
 
@@ -31,8 +29,7 @@ class SyncDirs:
             tgt (str): Target directory.
         """
         self.__name = name
-        self.srcPath = src
-        self.tgtPath = tgt
+        self.srcPath, self.tgtPath = paths
         self.start = time() 
         self.end = None
         while True:
@@ -41,6 +38,9 @@ class SyncDirs:
             else:
                 print('Invalid source directory: ', self.srcPath)
                 self.srcPath = input('Re-enter path: ')
+                if self.srcPath =='cancel':
+                    exit()
+        self.addJob(self)
 
     def __str__(self):
         return f"""
@@ -55,16 +55,13 @@ Target: {self.tgtPath}
         and target directory and then synchronize two
         paths.
         """
-        if self.checksum(self.srcPath, self.tgtPath, dir=True):
-            print('No change detected.')
-        else:
-            for folder, _, files in os.walk(self.srcPath):
-                tail = self.getTail(folder, src=True)
-                tgt = f'{self.tgtPath}{tail}'
-                self.makeTgtDirs(tgt)
-                for file in files:
-                    self.copy(folder, tgt, file)
-            self.clean()
+        for folder, _, files in os.walk(self.srcPath):
+            tail = self.getTail(folder, src=True)
+            tgt = f'{self.tgtPath}{tail}'
+            self.makeTgtDirs(tgt)
+            for file in files:
+                self.copy(folder, tgt, file)
+        self.clean()
 
     def getTail(self, folder, src=False, tgt=False):
         """
@@ -89,7 +86,7 @@ Target: {self.tgtPath}
         """
         if src:
             return folder.replace(self.srcPath, '')
-        if tgt:
+        elif tgt:
             return folder.replace(self.tgtPath, '')
         else:
             return None
@@ -103,17 +100,18 @@ Target: {self.tgtPath}
             for folder, _, files in os.walk(self.tgtPath):
                 tail = self.getTail(folder, tgt=True)
                 if not os.path.exists(self.srcPath+tail):
-                    print(f'removing "{folder}"')
+                    print(f'\nremoving "{folder}"')
                     shutil.rmtree(folder)
                 else:
                     for file in files:
                         if not os.path.exists(self.srcPath+tail+sep+file):
                             tgtFile = folder+sep+file
-                            print(f'removing "{tgtFile}"')
-                            os.remove(tgtFile)
-                            
-        except FileNotFoundError as err:
-            print(err)
+                            print(f'\nremoving "{tgtFile}"')
+                            os.remove(tgtFile) 
+                                 
+        except FileNotFoundError:
+            pass
+            
         except KeyError:
             pass
 
@@ -130,13 +128,15 @@ Target: {self.tgtPath}
         src = f'{folder}{sep}{file}'
         tgt = f'{tgt}{sep}{file}'
         if os.path.exists(tgt):
-            if not self.checksum(src, tgt):
-                print(f'copying "{file}"')
+            if self.checksum(src, tgt):
+                pass
+            elif not self.checksum(src, tgt):
+                print(f'\ncopying "{file}"')
                 shutil.copy(src, tgt)
-            elif self.checksum(src, tgt) is None:
+            else:
                 pass
         else:
-            print(f'copying "{file}"')
+            print(f'\ncopying "{file}"')
             shutil.copy(src, tgt)
 
     def backUp(self):
@@ -157,16 +157,16 @@ Target: {self.tgtPath}
         self.makeTgtDirs(backup)
         while len(os.listdir(backup)) > 12:
             a = sorted(os.listdir(backup)).pop(0)
-            print('deleting oldest backup')
+            print('\ndeleting oldest backup')
             shutil.rmtree(backup+sep+a)
         self.end = time()
-        if int(self.end - self.start) > 300:
-            print(f'creating backup for <{self.__name}>')
+        if int(self.end - self.start) > 120:
+            print(f'\ncreating backup for <{self.__name}>')
             shutil.copytree(self.tgtPath, backup + sep +
                             basename + ' ' + str(datetime.now()))
             self.start = time()
 
-    def checksum(self, src, tgt, dir=False):
+    def checksum(self, src, tgt):
         """
         Compares parallel files or source and target directories
         of their size. 
@@ -174,31 +174,14 @@ Target: {self.tgtPath}
         Args:
             src (str): absolute path of file or directory in source directory.
             tgt (str): absolute path of file or directory in target directory.
-            dir (bool, optional): set to True if comparing folder sizes. Defaults to False.
 
         Returns:
             bool: size comparison of src and tgt.
         """
-        if dir:
-            srcSize = 0
-            tgtSize = 0
-            for folder, _, files in os.walk(src):
-                for file in files:
-                    file = f'{folder}{sep}{file}'
-                    srcSize += os.path.getsize(file)
-            for folder, _, files in os.walk(tgt):
-                for file in files:
-                    file = f'{folder}{sep}{file}'
-                    tgtSize += os.path.getsize(file)
-            if srcSize == tgtSize:
-                return True
-            else:
-                return False
+        if os.path.getsize(src) == os.path.getsize(tgt):
+            return True
         else:
-            if os.path.getsize(src) == os.path.getsize(tgt):
-                return True
-            else:
-                return False
+            return False
 
     @classmethod
     def run(cls):
@@ -206,14 +189,21 @@ Target: {self.tgtPath}
         Execute synchronizing process for each SyncDirs instance
         in jobs set.
         """
+        count = 0
         while True:
             for job in cls.jobs:
-                print(job)
                 job.sync()
                 job.backUp()
-                print(datetime.now())
+                if count < 10:
+                    print(f'{count}', end='', flush=True)
+                    count += 1
+                else:
+                    count = 0
                 sleep(1)
                 
+    @classmethod
+    def addJob(cls, instance):
+        cls.jobs.add(instance)
     @staticmethod
     def makeTgtDirs(tgt):
         """
@@ -224,13 +214,13 @@ Target: {self.tgtPath}
         """
         try:
             os.makedirs(tgt)
-            print(f'creating "{tgt}" because it does not exist.')
+            print(f'\ncreating "{tgt}" because it does not exist.')
 
-        except FileExistsError as e:
+        except FileExistsError:
             pass
-        
+            
 
-SyncDirs.jobs.add(SyncDirs('example', '/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
+SyncDirs('example', ('/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
 
 while True:
     SyncDirs.run()
