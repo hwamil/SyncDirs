@@ -33,7 +33,7 @@ class SyncDirs:
         self.__name = name
         self.srcPath = src
         self.tgtPath = tgt
-        self.start = time()
+        self.start = time() 
         self.end = None
         while True:
             if os.path.exists(self.srcPath):
@@ -141,7 +141,16 @@ Target: {self.tgtPath}
 
     def backUp(self):
         """
-        Makes clones of target directory at set interval
+        Makes clones of target directory at set interval in
+        its parent directory.
+        
+        example.tgtPath = 'home/user/Desktop/buffer/another'
+        backup = 'home/user/Desktop/buffer/another_backup'
+        
+        in os.listdir(backup) = [
+                                'another backup 2020-08-09 17:01:13.731190',
+                                'another backup 2020-08-09 17:11:13.731190'
+                                ]
         """
         basename = os.path.basename(self.tgtPath)
         backup = self.tgtPath+sep+'..'+sep+f'{basename}_backup'
@@ -220,8 +229,8 @@ Target: {self.tgtPath}
 
         except FileExistsError as e:
             pass
-            
-
+        
+        
 jobs = set()
 jobs.add(SyncDirs('example', '/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
 
