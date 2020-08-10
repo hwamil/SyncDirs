@@ -219,8 +219,7 @@ Target: {self.tgtPath}
 os.chdir(os.path.dirname(__file__))
 jobs = set()
 
-jobs.add(SyncDirs('1', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/PY2/CLONE1'))
-jobs.add(SyncDirs('2', '/home/spyder/Desktop/PYTHON', '/home/spyder/Desktop/spam/musubi/lamb/over/rice'))
+jobs.add(SyncDirs('example', '/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
 
 while True:
     SyncDirs.run()
