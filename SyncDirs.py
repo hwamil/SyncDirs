@@ -68,7 +68,7 @@ Target: {self.tgtPath}
         example.tgtPath = '/home/user/Desktop/foo/bar'
         folder = '/home/user/Desktop/buffer/another'
         
-        example.getTail(folder, src=True) --> '/buffer'
+        example.getTail(folder, src=True) --> '/another'
         
         example.tgtPath + '/another'
         = 'home/user/Desktop/foo/bar/another'
