@@ -20,7 +20,7 @@ class SyncDirs:
     Returns:
         obj: instance of SyncDirs
     """
-
+    jobs = set()
     def __init__(self, name, src, tgt):
         """
         Initialize an instance of SyncDirs.
@@ -155,12 +155,12 @@ Target: {self.tgtPath}
         basename = os.path.basename(self.tgtPath)
         backup = self.tgtPath+sep+'..'+sep+f'{basename}_backup'
         self.makeTgtDirs(backup)
-        while len(os.listdir(backup)) > 5:
+        while len(os.listdir(backup)) > 12:
             a = sorted(os.listdir(backup)).pop(0)
             print('deleting oldest backup')
             shutil.rmtree(backup+sep+a)
         self.end = time()
-        if int(self.end - self.start) > 600:
+        if int(self.end - self.start) > 300:
             print(f'creating backup for <{self.__name}>')
             shutil.copytree(self.tgtPath, backup + sep +
                             basename + ' ' + str(datetime.now()))
@@ -203,18 +203,17 @@ Target: {self.tgtPath}
     @classmethod
     def run(cls):
         """
-        Execute synchronizing process for each SyncDir instance
-        in SyncDir.jobs.
+        Execute synchronizing process for each SyncDirs instance
+        in jobs set.
         """
-        global jobs
         while True:
-            for job in jobs:
+            for job in cls.jobs:
                 print(job)
                 job.sync()
                 job.backUp()
                 print(datetime.now())
                 sleep(1)
-
+                
     @staticmethod
     def makeTgtDirs(tgt):
         """
@@ -230,9 +229,8 @@ Target: {self.tgtPath}
         except FileExistsError as e:
             pass
         
-        
-jobs = set()
-jobs.add(SyncDirs('example', '/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
+
+SyncDirs.jobs.add(SyncDirs('example', '/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
 
 while True:
     SyncDirs.run()
