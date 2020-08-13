@@ -204,6 +204,7 @@ Target: {self.tgtPath}
                 
     @classmethod
     def addJob(cls, instance):
+        print(f'{instance}')
         cls.jobs.add(instance)
     @staticmethod
     def makeTgtDirs(tgt):
