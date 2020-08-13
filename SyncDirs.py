@@ -9,8 +9,8 @@ from sys import exit
 class SyncDirs:
     """
     Synchronizes source directory tree and contents to target
-    with identical structure and contents. Uses checksum and
-    existence of source in target to decide whether to copy
+    with identical structure and contents. Uses size comparison
+    and existence of source in target to decide whether to copy
     or not.
 
     File or folder not in source is removed from target.
@@ -116,7 +116,7 @@ Target: {self.tgtPath}
             pass
 
     def copy(self, folder, tgt, file):
-        """uses self.checksum() and os.path.exists()
+        """uses self.compareSize() and os.path.exists()
         to decide whether to copy source file/directory
         to target.
 
@@ -128,9 +128,9 @@ Target: {self.tgtPath}
         src = f'{folder}{sep}{file}'
         tgt = f'{tgt}{sep}{file}'
         if os.path.exists(tgt):
-            if self.checksum(src, tgt):
+            if self.compareSize(src, tgt):
                 pass
-            elif not self.checksum(src, tgt):
+            elif not self.compareSize(src, tgt):
                 print(f'\ncopying "{file}"')
                 shutil.copy(src, tgt)
             else:
@@ -166,7 +166,7 @@ Target: {self.tgtPath}
                             basename + ' ' + str(datetime.now()))
             self.start = time()
 
-    def checksum(self, src, tgt):
+    def compareSize(self, src, tgt):
         """
         Compares parallel files or source and target directories
         of their size. 
