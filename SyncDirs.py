@@ -192,6 +192,7 @@ Target: {self.tgtPath}
         count = 0
         while True:
             for job in cls.jobs:
+                print(job)
                 job.sync()
                 job.backUp()
                 if count < 10:
