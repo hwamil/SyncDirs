@@ -1,9 +1,8 @@
 import os
 from os import sep
 import shutil
-from time import time, sleep
+from time import time
 from datetime import datetime
-from sys import exit
 
 
 class SyncDirs:
@@ -30,7 +29,10 @@ class SyncDirs:
         """
         self.__name = name
         self.srcPath, self.tgtPath = paths
-        self.start = time() 
+        self.isFile = False
+        if os.path.isfile(self.srcPath):
+           self.isFile = True
+        self.start = time() - 360 
         self.end = None
         while True:
             if os.path.exists(self.srcPath):
@@ -55,13 +57,20 @@ Target: {self.tgtPath}
         and target directory and then synchronize two
         paths.
         """
-        for folder, _, files in os.walk(self.srcPath):
-            tail = self.getTail(folder, src=True)
-            tgt = f'{self.tgtPath}{tail}'
-            self.makeTgtDirs(tgt)
-            for file in files:
-                self.copy(folder, tgt, file)
-        self.clean()
+        if self.isFile:
+            self.makeTgtDirs(self.tgtPath)
+            file = os.path.basename(self.srcPath) 
+            self.copyFile(file)
+            self.clean()
+            
+        else:    
+            for folder, _, files in os.walk(self.srcPath):
+                tail = self.getTail(folder, src=True)
+                tgt = f'{self.tgtPath}{tail}'
+                self.makeTgtDirs(tgt)
+                for file in files:
+                    self.copy(folder, tgt, file)
+            self.clean()
 
     def getTail(self, folder, src=False, tgt=False):
         """
@@ -96,24 +105,41 @@ Target: {self.tgtPath}
         Removes files and/or directories from target directory 
         that no longer exist in source directory.
         """
-        try:
-            for folder, _, files in os.walk(self.tgtPath):
-                tail = self.getTail(folder, tgt=True)
-                if not os.path.exists(self.srcPath+tail):
-                    print(f'\nremoving "{folder}"')
-                    shutil.rmtree(folder)
-                else:
-                    for file in files:
-                        if not os.path.exists(self.srcPath+tail+sep+file):
-                            tgtFile = folder+sep+file
-                            print(f'\nremoving "{tgtFile}"')
-                            os.remove(tgtFile) 
-                                 
-        except FileNotFoundError:
-            pass
-            
-        except KeyError:
-            pass
+        if self.isFile:
+            file = os.path.basename(self.srcPath)
+            if not os.path.exists(self.srcPath):
+                os.remove(self.tgtPath+sep+file)
+          
+        else:
+            try:
+                for folder, _, files in os.walk(self.tgtPath):
+                    tail = self.getTail(folder, tgt=True)
+                    if not os.path.exists(self.srcPath+tail):
+                        print(f'\nremoving "{folder}"')
+                        shutil.rmtree(folder)
+                    else:
+                        for file in files:
+                            if not os.path.exists(self.srcPath+tail+sep+file):
+                                tgtFile = folder+sep+file
+                                print(f'\nremoving "{tgtFile}"')
+                                os.remove(tgtFile) 
+                                     
+            except FileNotFoundError:
+                pass
+                
+            except KeyError:
+                pass
+
+    def copyFile(self, file):
+        src = self.srcPath
+        tgt = self.tgtPath + sep + file
+        if os.path.exists(self.tgtPath+sep+file):
+            if not self.compareSize(src, tgt):
+                shutil.copy(src, tgt)
+                print(f'\ncopying "{file}"')
+        else:
+            shutil.copy(src, tgt)
+            print(f'\ncopying "{file}"')
 
     def copy(self, folder, tgt, file):
         """uses self.compareSize() and os.path.exists()
@@ -128,13 +154,9 @@ Target: {self.tgtPath}
         src = f'{folder}{sep}{file}'
         tgt = f'{tgt}{sep}{file}'
         if os.path.exists(tgt):
-            if self.compareSize(src, tgt):
-                pass
-            elif not self.compareSize(src, tgt):
+            if not self.compareSize(src, tgt):
                 print(f'\ncopying "{file}"')
                 shutil.copy(src, tgt)
-            else:
-                pass
         else:
             print(f'\ncopying "{file}"')
             shutil.copy(src, tgt)
@@ -160,7 +182,7 @@ Target: {self.tgtPath}
             print('\ndeleting oldest backup')
             shutil.rmtree(backup+sep+a)
         self.end = time()
-        if int(self.end - self.start) > 120:
+        if int(self.end - self.start) > 360:
             print(f'\ncreating backup for <{self.__name}>')
             shutil.copytree(self.tgtPath, backup + sep +
                             basename + ' ' + str(datetime.now()))
@@ -200,7 +222,6 @@ Target: {self.tgtPath}
                     count += 1
                 else:
                     count = 0
-                sleep(1)
                 
     @classmethod
     def addJob(cls, instance):
