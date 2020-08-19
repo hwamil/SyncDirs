@@ -175,7 +175,7 @@ Target: {self.tgtPath}
                                 ]
         """
         basename = os.path.basename(self.tgtPath)
-        backup = self.tgtPath+sep+'..'+sep+f'{basename}_backup'
+        backup = self.tgtPath+sep+'..'+sep+f'.{basename}_backup'
         self.makeTgtDirs(backup)
         while len(os.listdir(backup)) > 12:
             a = sorted(os.listdir(backup)).pop(0)
@@ -227,6 +227,7 @@ Target: {self.tgtPath}
     def addJob(cls, instance):
         print(f'{instance}')
         cls.jobs.add(instance)
+
     @staticmethod
     def makeTgtDirs(tgt):
         """
