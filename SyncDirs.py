@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 from os import sep
 import shutil
@@ -110,22 +112,17 @@ Target: {self.tgtPath}
             if not os.path.exists(self.srcPath):
                 os.remove(self.tgtPath+sep+file)
         else:
-            try:
-                for folder, _, files in os.walk(self.tgtPath):
-                    tail = self.getTail(folder, tgt=True)
-                    if not os.path.exists(self.srcPath+tail):
-                        print(f'\nremoving "{folder}"')
-                        shutil.rmtree(folder)
-                    else:
-                        for file in files:
-                            if not os.path.exists(self.srcPath+tail+sep+file):
-                                tgtFile = folder+sep+file
-                                print(f'\nremoving "{tgtFile}"')
-                                os.remove(tgtFile)
-            except FileNotFoundError:
-                pass
-            except KeyError:
-                pass
+            for folder, _, files in os.walk(self.tgtPath):
+                tail = self.getTail(folder, tgt=True)
+                if not os.path.exists(self.srcPath+tail):
+                    print(f'\nremoving "{folder}"')
+                    shutil.rmtree(folder)
+                else:
+                    for file in files:
+                        if not os.path.exists(self.srcPath+tail+sep+file):
+                            tgtFile = folder+sep+file
+                            print(f'\nremoving "{tgtFile}"')
+                            os.remove(tgtFile)
 
     def copyFile(self, file):
         src = self.srcPath
@@ -210,15 +207,18 @@ Target: {self.tgtPath}
         """
         count = 0
         while True:
-            for job in cls.jobs:
-                print(job)
-                job.sync()
-                job.backUp()
-                if count < 10:
-                    print(f'{count}', end='', flush=True)
-                    count += 1
-                else:
-                    count = 0
+            try:
+                for job in cls.jobs:
+                    print(job)
+                    job.sync()
+                    job.backUp()
+                    if count < 10:
+                        print(f'{count}', end='', flush=True)
+                        count += 1
+                    else:
+                        count = 0
+            except:
+                pass
 
     @classmethod
     def addJob(cls, instance):
