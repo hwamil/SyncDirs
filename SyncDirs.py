@@ -18,6 +18,7 @@ class SyncDirs:
         obj: instance of SyncDirs
     """
     jobs = set()
+
     def __init__(self, name, paths):
         """
         Initialize an instance of SyncDirs.
@@ -31,8 +32,8 @@ class SyncDirs:
         self.srcPath, self.tgtPath = paths
         self.isFile = False
         if os.path.isfile(self.srcPath):
-           self.isFile = True
-        self.start = time() - 360 
+            self.isFile = True
+        self.start = time() - 360
         self.end = None
         while True:
             if os.path.exists(self.srcPath):
@@ -40,7 +41,7 @@ class SyncDirs:
             else:
                 print('Invalid source directory: ', self.srcPath)
                 self.srcPath = input('Re-enter path: ')
-                if self.srcPath =='cancel':
+                if self.srcPath == 'cancel':
                     exit()
         self.addJob(self)
 
@@ -59,11 +60,10 @@ Target: {self.tgtPath}
         """
         if self.isFile:
             self.makeTgtDirs(self.tgtPath)
-            file = os.path.basename(self.srcPath) 
+            file = os.path.basename(self.srcPath)
             self.copyFile(file)
             self.clean()
-            
-        else:    
+        else:
             for folder, _, files in os.walk(self.srcPath):
                 tail = self.getTail(folder, src=True)
                 tgt = f'{self.tgtPath}{tail}'
@@ -87,8 +87,8 @@ Target: {self.tgtPath}
 
         Args:
             folder (str): current folder in os.walk() recursion.
-            src (bool, optional): set to True for source path. Defaults to False.
-            tgt (bool, optional): set to True for target path. Defaults to False.
+            src (bool, optional): set to True for source path.
+            tgt (bool, optional): set to True for target path.
 
         Returns:
             str: tail path of current folder in os.walk() recursion.
@@ -102,14 +102,13 @@ Target: {self.tgtPath}
 
     def clean(self):
         """
-        Removes files and/or directories from target directory 
+        Removes files and/or directories from target directory
         that no longer exist in source directory.
         """
         if self.isFile:
             file = os.path.basename(self.srcPath)
             if not os.path.exists(self.srcPath):
                 os.remove(self.tgtPath+sep+file)
-          
         else:
             try:
                 for folder, _, files in os.walk(self.tgtPath):
@@ -122,11 +121,9 @@ Target: {self.tgtPath}
                             if not os.path.exists(self.srcPath+tail+sep+file):
                                 tgtFile = folder+sep+file
                                 print(f'\nremoving "{tgtFile}"')
-                                os.remove(tgtFile) 
-                                     
+                                os.remove(tgtFile)
             except FileNotFoundError:
                 pass
-                
             except KeyError:
                 pass
 
@@ -191,7 +188,7 @@ Target: {self.tgtPath}
     def compareSize(self, src, tgt):
         """
         Compares parallel files or source and target directories
-        of their size. 
+        of their size.
 
         Args:
             src (str): absolute path of file or directory in source directory.
@@ -222,7 +219,7 @@ Target: {self.tgtPath}
                     count += 1
                 else:
                     count = 0
-                
+
     @classmethod
     def addJob(cls, instance):
         print(f'{instance}')
@@ -242,7 +239,7 @@ Target: {self.tgtPath}
 
         except FileExistsError:
             pass
-            
+
 
 SyncDirs('example', ('/SOURCE/DIRECTORY', '/TARGET/DIRECTORY'))
 
