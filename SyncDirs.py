@@ -212,12 +212,7 @@ Target: {self.tgtPath}
                     print(job)
                     job.sync()
                     job.backUp()
-                    if count < 10:
-                        print(f'{count}', end='', flush=True)
-                        count += 1
-                    else:
-                        count = 0
-            except:
+            except FileNotFoundError:
                 pass
 
     @classmethod
